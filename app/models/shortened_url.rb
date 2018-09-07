@@ -21,6 +21,9 @@ class ShortenedUrl < ApplicationRecord
     Proc.new { distinct },
     through: :visits,
     source: :user
+  
+  has_many :taggings
+  has_many :tag_topics, through: :taggings
 
   def ShortenedUrl.random_code
     code = SecureRandom.urlsafe_base64
