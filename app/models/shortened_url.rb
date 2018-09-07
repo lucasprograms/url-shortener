@@ -43,6 +43,4 @@ class ShortenedUrl < ApplicationRecord
   def num_recent_uniques
     distinct_visitors.where(["visits.created_at > ?", 10.minutes.ago])
   end
-
-
 end

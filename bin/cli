@@ -1,0 +1,59 @@
+#!/usr/bin/env ruby
+
+class CLI
+  def login_user
+    puts "Please enter your email:"
+
+    email = gets.chomp
+    email = 'lucasprograms@gmail.com' if email == "1"
+    user = User.find_by(email: email)
+    
+    if user
+      prompt_for_choice(user)
+    else
+      puts 'User not found. Re-trying..'
+      login_user
+    end
+  end
+
+  def prompt_for_choice(user)
+    puts "what do you want to do?"
+    puts "0. Create shortened URL"
+    puts "1. Visit shortened URL"
+    answer = gets.chomp
+
+    if answer == "0"
+      create_shortened_url(user)
+    elsif answer == "1"
+      visit_shortened_url(user)
+    else
+      puts "not a valid choice. Re-trying"
+      prompt_for_choice(user)
+    end
+  end
+
+  def create_shortened_url(user)
+    puts "please input a url"
+    url = gets.chomp
+    shortened_url = ShortenedUrl.createShortUrl(user, url)
+    puts shortened_url.id
+    puts '---------------------------------------'
+    puts "your url is #{shortened_url.short_url}"
+    puts "Goodbye!"
+    exit
+  end
+
+  def visit_shortened_url(user)
+    puts "please input your shortened_url"
+    url = gets.chomp
+    puts "accessing site..."
+    shortened_url = ShortenedUrl.find_by(short_url: url.to_s)
+    Visit.record_visit!(user, shortened_url)
+    Launchy.open(shortened_url.long_url)
+    puts "Goodbye!"
+    exit
+  end
+end
+
+cli = CLI.new
+cli.login_user
