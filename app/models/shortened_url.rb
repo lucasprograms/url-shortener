@@ -2,6 +2,8 @@ class ShortenedUrl < ApplicationRecord
   validates :short_url, uniqueness: true
   validates :long_url, presence: true
   validates :user_id, presence: true
+  validate :no_spamming
+  validate :non_premium_max
 
   belongs_to :submitter,
     primary_key: :id,
@@ -24,6 +26,18 @@ class ShortenedUrl < ApplicationRecord
   
   has_many :taggings
   has_many :tag_topics, through: :taggings
+
+  def no_spamming
+    if ShortenedUrl.where(user_id: user_id).where("created_at > ?", 1.minute.ago).count >= 5
+      errors.add(:shortened_url, "cannot be submitted more than 5 times in 1 minute")
+    end
+  end
+
+  def non_premium_max
+    if ShortenedUrl.joins("INNER JOIN users ON users.id = shortened_urls.user_id").where(user_id: user_id).where("users.premium = ?", false).count >= 5
+      errors.add(:shortened_url, "cannot be submitted more than 5 times by non-premium users")
+    end
+  end
 
   def ShortenedUrl.random_code
     code = SecureRandom.urlsafe_base64
