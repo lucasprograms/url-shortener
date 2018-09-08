@@ -45,8 +45,18 @@ class ShortenedUrl < ApplicationRecord
     ShortenedUrl.exists?(short_url: code) ? ShortenedUrl.random_code : code
   end
 
-  def ShortenedUrl.createShortUrl(user, url)
+  def ShortenedUrl.create_for_user_and_long_url!(user, url)
     ShortenedUrl.create!(long_url: url, user_id: user.id, short_url: random_code)
+  end
+
+  def ShortenedUrl.prune(n)
+    ShortenedUrl.delete(
+      ShortenedUrl
+      .select('shortened_urls.id')
+      .left_outer_joins(:visits)
+      .group("shortened_urls.id")
+      .where("visits.created_at < ? OR (visits.created_at IS NULL AND shortened_urls.created_at < ?)", n.minutes.ago, n.minutes.ago)
+    )
   end
 
   def num_clicks
